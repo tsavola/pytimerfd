@@ -34,10 +34,12 @@ CLOCK_MONOTONIC = 1
 
 bufsize         = 8
 
+libc = ctypes.CDLL(ctypes.util.find_library("c"), use_errno=True)
+
 class timespec(ctypes.Structure):
 
 	_fields_ = [
-		("tv_sec",      ctypes.c_uint64),
+		("tv_sec",      libc.time.restype),
 		("tv_nsec",     ctypes.c_long),
 	]
 
@@ -101,8 +103,6 @@ def errcheck(result, func, arguments):
 		raise OSError(errno, os.strerror(errno))
 
 	return result
-
-libc = ctypes.CDLL(ctypes.util.find_library("c"), use_errno=True)
 
 libc.timerfd_create.argtypes = [ctypes.c_int, ctypes.c_int]
 libc.timerfd_create.errcheck = errcheck
