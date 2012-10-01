@@ -3,6 +3,7 @@ __all__ = [
 ]
 
 import asyncore
+import errno
 
 import timerfd
 
@@ -22,7 +23,13 @@ class dispatcher(asyncore.file_dispatcher):
 		self.log_info("unhandled expire event", "warning")
 
 	def handle_read(self):
-		buf = self.recv(timerfd.bufsize)
+		try:
+			buf = self.recv(timerfd.bufsize)
+		except OSError as e:
+			if e.args[0] in (errno.EINTR, errno.EAGAIN):
+				return
+			raise
+
 		if buf:
 			count = timerfd.unpack(buf)
 			self.handle_expire(count)
