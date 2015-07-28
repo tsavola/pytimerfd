@@ -114,16 +114,23 @@ libc.timerfd_gettime.argtypes = [ctypes.c_int, ctypes.POINTER(itimerspec)]
 libc.timerfd_gettime.errcheck = errcheck
 
 def create(clock_id, flags=0):
-	return libc.timerfd_create(clock_id, flags)
+	ret = libc.timerfd_create(clock_id, flags)
+	if ret == -1:
+		raise OSError("Creation of timerfd failed: %s" % os.strerror(errno.errorcode))
+	return ret
 
 def settime(ufd, flags, new_value):
 	old_value = itimerspec()
-	libc.timerfd_settime(ufd, flags, ctypes.pointer(new_value), ctypes.pointer(old_value))
+	ret = libc.timerfd_settime(ufd, flags, ctypes.pointer(new_value), ctypes.pointer(old_value))
+	if ret == -1:
+		raise OSError("Setting timer failed: %s" % os.strerror(errno.errorcode))
 	return old_value
 
 def gettime(ufd):
 	curr_value = itimerspec()
-	libc.timerfd_gettime(ufd, ctypes.pointer(curr_value))
+	ret = libc.timerfd_gettime(ufd, ctypes.pointer(curr_value))
+	if ret == -1:
+		raise OSError("Getting timer failed: %s" % os.strerror(errno.errorcode))
 	return curr_value
 
 def unpack(buf):
